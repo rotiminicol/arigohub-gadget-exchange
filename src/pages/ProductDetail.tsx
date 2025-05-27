@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,80 +17,62 @@ import {
   Shield, 
   RefreshCw 
 } from 'lucide-react';
+import { allProducts } from '@/data/products';
+import { useCart } from '@/contexts/CartContext';
+import { useToast } from '@/hooks/use-toast';
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
-  const product = {
-    id: "1",
-    name: "iPhone 15 Pro Max 256GB Natural Titanium",
-    price: 850000,
-    originalPrice: 950000,
-    images: [
-      "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1565849904461-04a58ad377e0?w=600&h=600&fit=crop"
-    ],
-    condition: "New",
-    brand: "Apple",
-    rating: 4.8,
-    reviews: 24,
-    inStock: true,
-    stockCount: 5,
-    description: "The iPhone 15 Pro Max features a durable titanium design with the powerful A17 Pro chip. Experience next-level performance with advanced camera capabilities and all-day battery life.",
-    specifications: {
-      "Display": "6.7-inch Super Retina XDR display",
-      "Chip": "A17 Pro chip",
-      "Storage": "256GB",
-      "Camera": "48MP Main | 12MP Ultra Wide | 12MP Telephoto",
-      "Battery": "Up to 29 hours video playback",
-      "Operating System": "iOS 17",
-      "Colors": "Natural Titanium, Blue Titanium, White Titanium, Black Titanium"
-    },
-    features: [
-      "Titanium design",
-      "A17 Pro chip",
-      "Advanced camera system",
-      "Action Button",
-      "USB-C connector",
-      "Face ID"
-    ]
-  };
+  const product = allProducts.find(p => p.id === id);
 
-  const relatedProducts = [
-    {
-      id: "2",
-      name: "iPhone 15 Pro 128GB",
-      price: 720000,
-      image: "https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=300&fit=crop",
-      condition: "New" as const,
-      rating: 4.7,
-      reviews: 18
-    },
-    {
-      id: "3",
-      name: "AirPods Pro (2nd generation)",
-      price: 180000,
-      image: "https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=400&h=300&fit=crop",
-      condition: "New" as const,
-      rating: 4.9,
-      reviews: 32
-    },
-    {
-      id: "4",
-      name: "MagSafe Charger",
-      price: 35000,
-      image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400&h=300&fit=crop",
-      condition: "New" as const,
-      rating: 4.6,
-      reviews: 12
-    }
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+          <Button onClick={() => navigate('/products')}>
+            Back to Products
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Generate multiple images for the product (using the same image with different params for demo)
+  const productImages = [
+    product.image,
+    product.image.replace('fit=crop', 'fit=crop&brightness=1.1'),
+    product.image.replace('fit=crop', 'fit=crop&contrast=1.1'),
+    product.image.replace('fit=crop', 'fit=crop&saturation=1.1')
   ];
 
-  const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+  const relatedProducts = allProducts
+    .filter(p => p.category === product.category && p.id !== product.id)
+    .slice(0, 3);
+
+  const discount = product.originalPrice ? 
+    Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+
+  const handleAddToCart = () => {
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product);
+    }
+    toast({
+      title: "Added to cart",
+      description: `${quantity} x ${product.name} added to your cart.`,
+    });
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    navigate('/checkout');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,13 +82,13 @@ const ProductDetail = () => {
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-lg overflow-hidden">
               <img
-                src={product.images[selectedImage]}
+                src={productImages[selectedImage]}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="grid grid-cols-4 gap-2">
-              {product.images.map((image, index) => (
+              {productImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -218,7 +200,12 @@ const ProductDetail = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button size="lg" className="flex-1">
+                <Button 
+                  size="lg" 
+                  className="flex-1"
+                  onClick={handleAddToCart}
+                  disabled={!product.inStock || product.stockCount === 0}
+                >
                   Add to Cart
                 </Button>
                 <Button variant="outline" size="lg">
@@ -229,7 +216,13 @@ const ProductDetail = () => {
                 </Button>
               </div>
 
-              <Button variant="outline" size="lg" className="w-full">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full"
+                onClick={handleBuyNow}
+                disabled={!product.inStock || product.stockCount === 0}
+              >
                 Buy Now
               </Button>
             </div>
@@ -273,7 +266,7 @@ const ProductDetail = () => {
               
               <TabsContent value="specifications" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(product.specifications).map(([key, value]) => (
+                  {Object.entries(product.specifications || {}).map(([key, value]) => (
                     <div key={key} className="flex justify-between py-3 border-b border-gray-100">
                       <span className="font-medium text-gray-700">{key}</span>
                       <span className="text-gray-600">{value}</span>
@@ -284,7 +277,7 @@ const ProductDetail = () => {
               
               <TabsContent value="features" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {product.features.map((feature, index) => (
+                  {(product.features || []).map((feature, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <Check className="w-4 h-4 text-green-600" />
                       <span>{feature}</span>
@@ -305,14 +298,16 @@ const ProductDetail = () => {
         </Card>
 
         {/* Related Products */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {relatedProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
+        {relatedProducts.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Related Products</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedProducts.map((product) => (
+                <ProductCard key={product.id} {...product} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

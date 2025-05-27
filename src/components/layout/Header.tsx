@@ -14,16 +14,18 @@ import {
   Headphones,
   Shield
 } from 'lucide-react';
+import { useCart } from '@/contexts/CartContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const cartItemsCount = 0; // Will be managed by cart context later
+  const { getTotalItems } = useCart();
+  const cartItemsCount = getTotalItems();
 
   const categories = [
-    { name: 'Phones', icon: Smartphone, href: '/products?category=phones' },
-    { name: 'Laptops', icon: Laptop, href: '/products?category=laptops' },
-    { name: 'Gaming', icon: Gamepad2, href: '/products?category=gaming' },
-    { name: 'Audio', icon: Headphones, href: '/products?category=audio' },
+    { name: 'Phones', icon: Smartphone, href: '/category/phones' },
+    { name: 'Laptops', icon: Laptop, href: '/category/laptops' },
+    { name: 'Gaming', icon: Gamepad2, href: '/category/gaming' },
+    { name: 'Audio', icon: Headphones, href: '/category/audio' },
   ];
 
   return (
