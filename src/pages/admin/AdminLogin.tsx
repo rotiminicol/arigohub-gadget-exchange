@@ -4,15 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Shield, Loader2 } from 'lucide-react';
+import { authApi } from '@/services/xanoApi';
+import { useToast } from '@/hooks/use-toast';
 
-const AdminLogin = () => {
+interface AdminLoginProps {
+  onLogin: () => void;
+}
+
+const AdminLogin = ({ onLogin }: AdminLoginProps) => {
   const [credentials, setCredentials] = useState({
     email: '',
     password: ''
   });
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleInputChange = (field: string, value: string) => {
     setCredentials(prev => ({ ...prev, [field]: value }));
@@ -20,10 +26,33 @@ const AdminLogin = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would authenticate with Xano
-    console.log('Admin login attempt:', credentials);
-    // For demo purposes, redirect to dashboard
-    navigate('/admin/dashboard');
+    setIsLoading(true);
+
+    try {
+      const response = await authApi.login(credentials.email, credentials.password);
+      
+      if (response.authToken) {
+        localStorage.setItem('admin_token', response.authToken);
+        localStorage.setItem('admin_user', JSON.stringify(response.user));
+        
+        toast({
+          title: "Success",
+          description: "Login successful! Welcome to Admin Portal.",
+        });
+        
+        onLogin();
+      } else {
+        throw new Error(response.message || 'Login failed');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Invalid credentials. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,6 +85,7 @@ const AdminLogin = () => {
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   required
                   className="mt-1"
+                  disabled={isLoading}
                 />
               </div>
 
@@ -68,11 +98,19 @@ const AdminLogin = () => {
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   required
                   className="mt-1"
+                  disabled={isLoading}
                 />
               </div>
 
-              <Button type="submit" className="w-full">
-                Sign In
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
           </CardContent>

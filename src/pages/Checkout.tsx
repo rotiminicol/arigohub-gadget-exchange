@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,10 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CreditCard, Banknote } from 'lucide-react';
+import { CreditCard, Banknote, Loader2 } from 'lucide-react';
+import { createStripeCheckout, redirectToStripe } from '@/services/stripePayment';
+import { useToast } from '@/hooks/use-toast';
 
 const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [billingInfo, setBillingInfo] = useState({
     firstName: '',
     lastName: '',
@@ -20,10 +22,11 @@ const Checkout = () => {
     state: '',
     zipCode: ''
   });
+  const { toast } = useToast();
 
   const orderItems = [
-    { name: 'iPhone 15 Pro Max 256GB', price: 450000, quantity: 1 },
-    { name: 'MacBook Air M2 13"', price: 750000, quantity: 1 }
+    { id: 1, name: 'iPhone 15 Pro Max 256GB', price: 450000, quantity: 1 },
+    { id: 2, name: 'MacBook Air M2 13"', price: 750000, quantity: 1 }
   ];
 
   const subtotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -36,8 +39,50 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would integrate with Stripe via Xano
-    console.log('Processing payment...', { billingInfo, paymentMethod, total });
+    
+    if (!billingInfo.email) {
+      toast({
+        title: "Error",
+        description: "Email is required for checkout",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const checkoutData = {
+        items: orderItems,
+        customerEmail: billingInfo.email,
+        customerName: `${billingInfo.firstName} ${billingInfo.lastName}`,
+        shippingAddress: {
+          line1: billingInfo.address,
+          city: billingInfo.city,
+          state: billingInfo.state,
+          postal_code: billingInfo.zipCode,
+          country: 'NG', // Nigeria
+        }
+      };
+
+      const response = await createStripeCheckout(checkoutData);
+      
+      if (response.checkout_url) {
+        // Redirect to Stripe checkout
+        redirectToStripe(response.checkout_url);
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create checkout session. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -131,7 +176,7 @@ const Checkout = () => {
                 <div className="flex items-center space-x-2 p-4 border rounded-lg">
                   <RadioGroupItem value="card" id="card" />
                   <CreditCard className="w-5 h-5" />
-                  <Label htmlFor="card" className="flex-1 cursor-pointer">Credit/Debit Card</Label>
+                  <Label htmlFor="card" className="flex-1 cursor-pointer">Credit/Debit Card (Stripe)</Label>
                 </div>
                 <div className="flex items-center space-x-2 p-4 border rounded-lg">
                   <RadioGroupItem value="transfer" id="transfer" />
@@ -139,6 +184,11 @@ const Checkout = () => {
                   <Label htmlFor="transfer" className="flex-1 cursor-pointer">Bank Transfer</Label>
                 </div>
               </RadioGroup>
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  Secure payment processing powered by Stripe. Your payment information is encrypted and secure.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -174,8 +224,19 @@ const Checkout = () => {
                   <span>₦{total.toLocaleString()}</span>
                 </div>
               </div>
-              <Button className="w-full mt-6" onClick={handleSubmit}>
-                Complete Order
+              <Button 
+                className="w-full mt-6" 
+                onClick={handleSubmit}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Complete Order'
+                )}
               </Button>
             </CardContent>
           </Card>

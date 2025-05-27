@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
-  User, 
   ShoppingCart, 
   Home,
   ChevronDown
@@ -79,16 +78,6 @@ const Header = () => {
                   {cartCount}
                 </Badge>
               )}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/admin')}
-              className="hidden sm:flex"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Admin
             </Button>
           </div>
         </div>
