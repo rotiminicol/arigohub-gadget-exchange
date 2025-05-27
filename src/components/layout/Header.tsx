@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Search, 
   User, 
-  Cart as CartIcon, 
+  ShoppingCart, 
   Home,
   ChevronDown
 } from 'lucide-react';
@@ -73,7 +73,7 @@ const Header = () => {
               className="relative"
               onClick={() => navigate('/cart')}
             >
-              <CartIcon className="w-5 h-5" />
+              <ShoppingCart className="w-5 h-5" />
               {cartCount > 0 && (
                 <Badge className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 bg-red-500">
                   {cartCount}
