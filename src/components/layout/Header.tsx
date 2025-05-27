@@ -1,131 +1,153 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { 
-  Search, 
   ShoppingCart, 
-  Home,
-  ChevronDown
+  Menu, 
+  X,
+  Search,
+  Smartphone,
+  Laptop,
+  Gamepad2,
+  Headphones,
+  Shield
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Link, useNavigate } from 'react-router-dom';
 
 const Header = () => {
-  const [cartCount] = useState(0);
-  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const cartItemsCount = 0; // Will be managed by cart context later
 
   const categories = [
-    'Smartphones',
-    'Laptops',
-    'Gaming Consoles',
-    'Tablets',
-    'Accessories',
-    'Smart Watches'
+    { name: 'Phones', icon: Smartphone, href: '/products?category=phones' },
+    { name: 'Laptops', icon: Laptop, href: '/products?category=laptops' },
+    { name: 'Gaming', icon: Gamepad2, href: '/products?category=gaming' },
+    { name: 'Audio', icon: Headphones, href: '/products?category=audio' },
   ];
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        {/* Top bar */}
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
+              <span className="text-white font-bold text-sm">AH</span>
             </div>
             <span className="text-xl font-bold text-gray-900">ArigoHub</span>
           </Link>
 
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-xl mx-8">
-            <div className="relative w-full">
-              <Input
-                type="text"
-                placeholder="Search for phones, laptops, consoles..."
-                className="w-full pl-10 pr-4 py-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            </div>
-          </div>
-
-          {/* Right actions */}
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/track')}
-              className="hidden sm:flex"
-            >
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link to="/" className="text-gray-700 hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link to="/products" className="text-gray-700 hover:text-primary transition-colors">
+              Products
+            </Link>
+            <Link to="/swap" className="text-gray-700 hover:text-primary transition-colors">
+              Swap
+            </Link>
+            <Link to="/sell" className="text-gray-700 hover:text-primary transition-colors">
+              Sell
+            </Link>
+            <Link to="/track" className="text-gray-700 hover:text-primary transition-colors">
               Track Order
+            </Link>
+          </nav>
+
+          {/* Right Side Actions */}
+          <div className="flex items-center space-x-4">
+            {/* Search Button - Desktop */}
+            <Button variant="ghost" size="sm" className="hidden md:flex">
+              <Search className="w-4 h-4" />
             </Button>
-            
+
+            {/* Admin Portal Button */}
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/admin" className="flex items-center space-x-1">
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:block">Admin</span>
+              </Link>
+            </Button>
+
+            {/* Cart */}
+            <Button variant="ghost" size="sm" className="relative" asChild>
+              <Link to="/cart">
+                <ShoppingCart className="w-5 h-5" />
+                {cartItemsCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs">
+                    {cartItemsCount}
+                  </Badge>
+                )}
+              </Link>
+            </Button>
+
+            {/* Mobile Menu Button */}
             <Button
               variant="ghost"
               size="sm"
-              className="relative"
-              onClick={() => navigate('/cart')}
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <ShoppingCart className="w-5 h-5" />
-              {cartCount > 0 && (
-                <Badge className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 bg-red-500">
-                  {cartCount}
-                </Badge>
-              )}
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center space-x-8 py-3 border-t">
-          <Link to="/" className="flex items-center space-x-1 text-gray-700 hover:text-primary transition-colors">
-            <Home className="w-4 h-4" />
-            <span>Home</span>
-          </Link>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center space-x-1 text-gray-700 hover:text-primary transition-colors">
-              <span>Categories</span>
-              <ChevronDown className="w-4 h-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48">
-              {categories.map((category) => (
-                <DropdownMenuItem key={category}>
-                  <Link to={`/products?category=${category.toLowerCase()}`} className="w-full">
-                    {category}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Link to="/swap" className="text-gray-700 hover:text-primary transition-colors">
-            Swap Gadgets
-          </Link>
-
-          <Link to="/sell" className="text-gray-700 hover:text-primary transition-colors">
-            Sell Your Gadget
-          </Link>
-        </nav>
-
-        {/* Mobile search */}
-        <div className="md:hidden py-3 border-t">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder="Search products..."
-              className="w-full pl-10 pr-4 py-2"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          </div>
+        {/* Categories Bar - Desktop */}
+        <div className="hidden md:flex items-center space-x-6 py-3 border-t">
+          {categories.map((category) => (
+            <Link
+              key={category.name}
+              to={category.href}
+              className="flex items-center space-x-2 text-sm text-gray-600 hover:text-primary transition-colors"
+            >
+              <category.icon className="w-4 h-4" />
+              <span>{category.name}</span>
+            </Link>
+          ))}
         </div>
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-white border-t">
+          <div className="container mx-auto px-4 py-4 space-y-4">
+            <Link to="/" className="block text-gray-700 hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link to="/products" className="block text-gray-700 hover:text-primary transition-colors">
+              Products
+            </Link>
+            <Link to="/swap" className="block text-gray-700 hover:text-primary transition-colors">
+              Swap
+            </Link>
+            <Link to="/sell" className="block text-gray-700 hover:text-primary transition-colors">
+              Sell
+            </Link>
+            <Link to="/track" className="block text-gray-700 hover:text-primary transition-colors">
+              Track Order
+            </Link>
+            
+            {/* Mobile Categories */}
+            <div className="pt-4 border-t">
+              <p className="text-sm font-medium text-gray-900 mb-2">Categories</p>
+              {categories.map((category) => (
+                <Link
+                  key={category.name}
+                  to={category.href}
+                  className="flex items-center space-x-2 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
+                >
+                  <category.icon className="w-4 h-4" />
+                  <span>{category.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

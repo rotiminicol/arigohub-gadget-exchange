@@ -15,6 +15,8 @@ import {
   Package, 
   FolderOpen,
   ShoppingBag, 
+  Users,
+  CreditCard,
   Repeat, 
   DollarSign, 
   BarChart3, 
@@ -26,42 +28,52 @@ import { Link, useLocation } from "react-router-dom";
 const menuItems = [
   {
     title: "Dashboard",
-    url: "/dashboard",
+    url: "/admin/dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "Products",
-    url: "/products",
+    url: "/admin/products",
     icon: Package,
   },
   {
     title: "Categories",
-    url: "/categories",
+    url: "/admin/categories",
     icon: FolderOpen,
   },
   {
     title: "Orders",
-    url: "/orders",
+    url: "/admin/orders",
     icon: ShoppingBag,
   },
   {
+    title: "Users",
+    url: "/admin/users",
+    icon: Users,
+  },
+  {
+    title: "Transactions",
+    url: "/admin/transactions",
+    icon: CreditCard,
+  },
+  {
     title: "Swap Requests",
-    url: "/swaps",
+    url: "/admin/swaps",
     icon: Repeat,
   },
   {
     title: "Sell Requests",
-    url: "/sells",
+    url: "/admin/sells",
     icon: DollarSign,
   },
   {
     title: "Reports",
-    url: "/reports",
+    url: "/admin/reports",
     icon: BarChart3,
   },
   {
     title: "Settings",
-    url: "/settings",
+    url: "/admin/settings",
     icon: Settings,
   },
 ];
@@ -76,7 +88,7 @@ const AdminSidebar = () => {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Shield className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-gray-900">Admin Portal</span>
+          <span className="text-lg font-bold text-gray-900">ArigoHub Admin</span>
         </div>
       </SidebarHeader>
       <SidebarContent>

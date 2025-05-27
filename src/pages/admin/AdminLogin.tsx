@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Shield, Loader2 } from 'lucide-react';
-import { authApi } from '@/services/xanoApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminLoginProps {
@@ -20,6 +19,10 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Hardcoded admin credentials
+  const ADMIN_EMAIL = 'admin@arigohub.com';
+  const ADMIN_PASSWORD = 'admin123';
+
   const handleInputChange = (field: string, value: string) => {
     setCredentials(prev => ({ ...prev, [field]: value }));
   };
@@ -28,31 +31,34 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      const response = await authApi.login(credentials.email, credentials.password);
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (credentials.email === ADMIN_EMAIL && credentials.password === ADMIN_PASSWORD) {
+      localStorage.setItem('admin_token', 'admin_authenticated');
+      localStorage.setItem('admin_user', JSON.stringify({
+        email: ADMIN_EMAIL,
+        name: 'Admin User',
+        role: 'Super Admin'
+      }));
       
-      if (response.authToken) {
-        localStorage.setItem('admin_token', response.authToken);
-        localStorage.setItem('admin_user', JSON.stringify(response.user));
-        
-        toast({
-          title: "Success",
-          description: "Login successful! Welcome to Admin Portal.",
-        });
-        
-        onLogin();
-      } else {
-        throw new Error(response.message || 'Login failed');
-      }
-    } catch (error: any) {
+      toast({
+        title: "Success",
+        description: "Login successful! Welcome to Admin Portal.",
+      });
+      
+      // Redirect to admin dashboard
+      window.location.href = '/admin/dashboard';
+      onLogin();
+    } else {
       toast({
         title: "Error",
-        description: error.message || "Invalid credentials. Please try again.",
+        description: "Invalid credentials. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
 
   return (
@@ -63,7 +69,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             <Shield className="h-6 w-6 text-white" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Admin Portal
+            ArigoHub Admin Portal
           </h2>
           <p className="mt-2 text-sm text-gray-600">
             Sign in to access the admin dashboard
@@ -72,9 +78,15 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <CardTitle>Admin Sign In</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700 font-medium">Demo Credentials:</p>
+              <p className="text-sm text-blue-600">Email: admin@arigohub.com</p>
+              <p className="text-sm text-blue-600">Password: admin123</p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="email">Email address</Label>
@@ -86,6 +98,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
                   required
                   className="mt-1"
                   disabled={isLoading}
+                  placeholder="admin@arigohub.com"
                 />
               </div>
 
@@ -99,6 +112,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
                   required
                   className="mt-1"
                   disabled={isLoading}
+                  placeholder="admin123"
                 />
               </div>
 

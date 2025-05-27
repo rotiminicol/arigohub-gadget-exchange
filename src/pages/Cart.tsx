@@ -16,24 +16,7 @@ interface CartItem {
 }
 
 const Cart = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: '1',
-      name: 'iPhone 15 Pro Max 256GB',
-      price: 450000,
-      quantity: 1,
-      image: '/placeholder.svg',
-      condition: 'New'
-    },
-    {
-      id: '2',
-      name: 'MacBook Air M2 13"',
-      price: 750000,
-      quantity: 1,
-      image: '/placeholder.svg',
-      condition: 'Used'
-    }
-  ]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const updateQuantity = (id: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -49,7 +32,7 @@ const Cart = () => {
   };
 
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = 5000;
+  const shipping = cartItems.length > 0 ? 5000 : 0;
   const total = subtotal + shipping;
 
   if (cartItems.length === 0) {
