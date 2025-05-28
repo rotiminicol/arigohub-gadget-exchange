@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { CartProvider } from "@/contexts/CartContext";
@@ -37,97 +37,104 @@ import { useState, useEffect } from "react";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
-  const [isAdminRoute, setIsAdminRoute] = useState(false);
+// Admin Layout Component
+const AdminLayout = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
-    setIsAdminAuthenticated(!!token);
-    setIsAdminRoute(window.location.pathname.startsWith('/admin'));
+    setIsAuthenticated(!!token);
+    setIsLoading(false);
   }, []);
 
-  // Admin Layout
-  if (isAdminRoute) {
-    if (!isAdminAuthenticated) {
-      return (
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AdminLogin onLogin={() => setIsAdminAuthenticated(true)} />
-            </BrowserRouter>
-          </TooltipProvider>
-        </QueryClientProvider>
-      );
-    }
-
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <SidebarProvider>
-              <div className="min-h-screen flex w-full">
-                <AdminSidebar />
-                <div className="flex-1 flex flex-col">
-                  <AdminHeader onLogout={() => setIsAdminAuthenticated(false)} />
-                  <main className="flex-1 overflow-auto">
-                    <Routes>
-                      <Route path="/admin" element={<AdminDashboard />} />
-                      <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                      <Route path="/admin/products" element={<AdminProducts />} />
-                      <Route path="/admin/categories" element={<AdminCategories />} />
-                      <Route path="/admin/orders" element={<AdminOrders />} />
-                      <Route path="/admin/users" element={<AdminUsers />} />
-                      <Route path="/admin/transactions" element={<AdminTransactions />} />
-                      <Route path="/admin/swaps" element={<AdminSwaps />} />
-                      <Route path="/admin/sells" element={<AdminSells />} />
-                      <Route path="/admin/reports" element={<AdminReports />} />
-                      <Route path="/admin/settings" element={<AdminSettings />} />
-                    </Routes>
-                  </main>
-                </div>
-              </div>
-            </SidebarProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  // Client Layout
+  if (!isAuthenticated) {
+    return <AdminLogin onLogin={() => setIsAuthenticated(true)} />;
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col">
+          <AdminHeader onLogout={() => setIsAuthenticated(false)} />
+          <main className="flex-1 overflow-auto">
+            <Routes>
+              <Route path="/" element={<AdminDashboard />} />
+              <Route path="/dashboard" element={<AdminDashboard />} />
+              <Route path="/products" element={<AdminProducts />} />
+              <Route path="/categories" element={<AdminCategories />} />
+              <Route path="/orders" element={<AdminOrders />} />
+              <Route path="/users" element={<AdminUsers />} />
+              <Route path="/transactions" element={<AdminTransactions />} />
+              <Route path="/swaps" element={<AdminSwaps />} />
+              <Route path="/sells" element={<AdminSells />} />
+              <Route path="/reports" element={<AdminReports />} />
+              <Route path="/settings" element={<AdminSettings />} />
+            </Routes>
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+// Client Layout Component
+const ClientLayout = () => {
+  return (
+    <CartProvider>
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/checkout/success" element={<CheckoutSuccess />} />
+            <Route path="/checkout/cancel" element={<CheckoutCancel />} />
+            <Route path="/track" element={<TrackOrder />} />
+            <Route path="/swap" element={<SwapGadget />} />
+            <Route path="/sell" element={<SellGadget />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </CartProvider>
+  );
+};
+
+// Route Detector Component
+const RouteDetector = () => {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  if (isAdminRoute) {
+    return <AdminLayout />;
+  }
+
+  return <ClientLayout />;
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <CartProvider>
-          <BrowserRouter>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/product/:id" element={<ProductDetail />} />
-                  <Route path="/category/:category" element={<CategoryPage />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/checkout/success" element={<CheckoutSuccess />} />
-                  <Route path="/checkout/cancel" element={<CheckoutCancel />} />
-                  <Route path="/track" element={<TrackOrder />} />
-                  <Route path="/swap" element={<SwapGadget />} />
-                  <Route path="/sell" element={<SellGadget />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          </BrowserRouter>
-        </CartProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/admin/*" element={<AdminLayout />} />
+            <Route path="*" element={<ClientLayout />} />
+          </Routes>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
