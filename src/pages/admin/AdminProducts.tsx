@@ -10,17 +10,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { 
-  Plus, 
   Search, 
-  Edit, 
-  Trash2, 
-  Eye,
-  Filter,
+  Plus,
+  Eye, 
+  Edit,
+  Trash2,
   Package,
-  DollarSign,
   TrendingUp,
   AlertTriangle,
-  Upload
+  CheckCircle,
+  Upload,
+  X
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,178 +30,179 @@ const AdminProducts = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '',
     price: '',
-    originalPrice: '',
-    condition: '',
     description: '',
-    features: '',
-    specifications: '',
     stock: '',
+    condition: 'new',
     brand: '',
     model: '',
-    color: '',
     storage: '',
+    color: '',
+    batteryHealth: '',
     warranty: ''
   });
+  const [productImages, setProductImages] = useState<File[]>([]);
 
-  // Enhanced product data with more comprehensive information
+  // Mock products data matching client portal structure
   const products = [
-    // Smartphones
-    { 
-      id: '1', 
-      name: 'iPhone 15 Pro Max 256GB Natural Titanium', 
-      category: 'Smartphones', 
-      price: 450000, 
-      originalPrice: 500000,
-      condition: 'New', 
-      stock: 5, 
-      status: 'active', 
-      image: '/placeholder.svg',
+    {
+      id: 1,
+      name: 'iPhone 15 Pro Max 256GB Natural Titanium',
+      category: 'smartphones',
       brand: 'Apple',
       model: 'iPhone 15 Pro Max',
-      color: 'Natural Titanium',
+      price: 450000,
+      originalPrice: 500000,
+      stock: 15,
+      status: 'active',
+      condition: 'new',
+      description: 'Latest iPhone with titanium build and A17 Pro chip',
       storage: '256GB',
-      warranty: '12 months',
-      sales_count: 12,
-      views: 234,
-      date_added: '2024-01-15'
+      color: 'Natural Titanium',
+      batteryHealth: '100%',
+      warranty: '1 Year Apple Warranty',
+      images: ['/placeholder.svg'],
+      rating: 4.9,
+      reviews: 156,
+      sold: 45,
+      created_at: '2024-01-15',
+      updated_at: '2024-01-20'
     },
-    { 
-      id: '2', 
-      name: 'Samsung Galaxy S24 Ultra 512GB Titanium Black', 
-      category: 'Smartphones', 
-      price: 420000, 
-      originalPrice: 480000,
-      condition: 'New', 
-      stock: 8, 
-      status: 'active', 
-      image: '/placeholder.svg',
-      brand: 'Samsung',
-      model: 'Galaxy S24 Ultra',
-      color: 'Titanium Black',
-      storage: '512GB',
-      warranty: '12 months',
-      sales_count: 8,
-      views: 156,
-      date_added: '2024-01-10'
-    },
-    // Laptops
-    { 
-      id: '6', 
-      name: 'MacBook Pro 16" M3 Pro 18GB RAM 512GB SSD', 
-      category: 'Laptops', 
-      price: 850000, 
-      originalPrice: 950000,
-      condition: 'New', 
-      stock: 3, 
-      status: 'active', 
-      image: '/placeholder.svg',
+    {
+      id: 2,
+      name: 'MacBook Air M2 13" 256GB Space Gray',
+      category: 'laptops',
       brand: 'Apple',
-      model: 'MacBook Pro 16"',
-      color: 'Space Black',
-      storage: '512GB SSD',
-      warranty: '12 months',
-      sales_count: 5,
-      views: 189,
-      date_added: '2024-01-08'
+      model: 'MacBook Air M2',
+      price: 750000,
+      originalPrice: 800000,
+      stock: 8,
+      status: 'active',
+      condition: 'like-new',
+      description: 'Lightweight laptop with M2 chip and 18-hour battery',
+      storage: '256GB SSD',
+      color: 'Space Gray',
+      batteryHealth: '95%',
+      warranty: '6 Months',
+      images: ['/placeholder.svg'],
+      rating: 4.8,
+      reviews: 89,
+      sold: 23,
+      created_at: '2024-01-10',
+      updated_at: '2024-01-18'
     },
-    // Gaming
-    { 
-      id: '11', 
-      name: 'PlayStation 5 Console + DualSense Controller', 
-      category: 'Gaming', 
-      price: 320000, 
-      originalPrice: 350000,
-      condition: 'New', 
-      stock: 0, 
-      status: 'out_of_stock', 
-      image: '/placeholder.svg',
+    {
+      id: 3,
+      name: 'PlayStation 5 Digital Edition',
+      category: 'gaming',
       brand: 'Sony',
-      model: 'PlayStation 5',
-      color: 'White',
+      model: 'PS5 Digital',
+      price: 320000,
+      originalPrice: 350000,
+      stock: 5,
+      status: 'low_stock',
+      condition: 'good',
+      description: 'Next-gen gaming console with 4K gaming',
       storage: '825GB SSD',
-      warranty: '12 months',
-      sales_count: 15,
-      views: 456,
-      date_added: '2024-01-05'
+      color: 'White',
+      warranty: '3 Months',
+      images: ['/placeholder.svg'],
+      rating: 4.7,
+      reviews: 234,
+      sold: 67,
+      created_at: '2024-01-05',
+      updated_at: '2024-01-16'
     }
+  ];
+
+  const categories = [
+    { value: 'smartphones', label: 'Smartphones' },
+    { value: 'laptops', label: 'Laptops' },
+    { value: 'tablets', label: 'Tablets' },
+    { value: 'gaming', label: 'Gaming Consoles' },
+    { value: 'audio', label: 'Audio Devices' }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'default';
+      case 'low_stock': return 'secondary';
       case 'out_of_stock': return 'destructive';
-      case 'discontinued': return 'secondary';
-      case 'draft': return 'outline';
+      case 'inactive': return 'outline';
       default: return 'secondary';
     }
   };
 
-  const getStockColor = (stock: number) => {
-    if (stock === 0) return 'destructive';
-    if (stock < 5) return 'secondary';
-    return 'default';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active': return <CheckCircle className="w-4 h-4" />;
+      case 'low_stock': return <AlertTriangle className="w-4 h-4" />;
+      case 'out_of_stock': return <X className="w-4 h-4" />;
+      default: return <Package className="w-4 h-4" />;
+    }
   };
 
-  const handleAddProduct = () => {
-    console.log('Adding product:', newProduct);
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    setProductImages(prev => [...prev, ...files].slice(0, 6));
+  };
+
+  const removeImage = (index: number) => {
+    setProductImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddProduct = async () => {
+    if (!newProduct.name || !newProduct.price || !newProduct.category) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Here you would integrate with Xano API
+    console.log('Adding product:', { ...newProduct, images: productImages });
+    
     toast({
       title: "Product Added",
-      description: `${newProduct.name} has been added to inventory.`,
+      description: `${newProduct.name} has been added successfully.`,
     });
+
     setIsAddDialogOpen(false);
     setNewProduct({
       name: '',
       category: '',
       price: '',
-      originalPrice: '',
-      condition: '',
       description: '',
-      features: '',
-      specifications: '',
       stock: '',
+      condition: 'new',
       brand: '',
       model: '',
-      color: '',
       storage: '',
+      color: '',
+      batteryHealth: '',
       warranty: ''
     });
-  };
-
-  const handleUpdateStock = (productId: string, newStock: number) => {
-    console.log(`Updating stock for product ${productId} to ${newStock}`);
-    toast({
-      title: "Stock Updated",
-      description: `Product stock updated to ${newStock} units.`,
-    });
-  };
-
-  const handleUpdateStatus = (productId: string, newStatus: string) => {
-    console.log(`Updating status for product ${productId} to ${newStatus}`);
-    toast({
-      title: "Status Updated",
-      description: `Product status updated to ${newStatus}.`,
-    });
+    setProductImages([]);
   };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || product.category.toLowerCase() === categoryFilter;
+                         product.model.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
     const matchesStatus = statusFilter === 'all' || product.status === statusFilter;
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const totalProducts = products.length;
   const activeProducts = products.filter(p => p.status === 'active').length;
-  const outOfStock = products.filter(p => p.stock === 0).length;
+  const lowStockProducts = products.filter(p => p.status === 'low_stock').length;
   const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-  const totalSales = products.reduce((sum, p) => sum + (p.sales_count || 0), 0);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -214,58 +215,44 @@ const AdminProducts = () => {
               Add Product
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Product</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="grid gap-4 py-4 max-h-[600px] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="name">Product Name *</Label>
                   <Input
                     id="name"
                     value={newProduct.name}
-                    onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                    onChange={(e) => setNewProduct(prev => ({...prev, name: e.target.value}))}
                     placeholder="e.g., iPhone 15 Pro Max 256GB"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="brand">Brand *</Label>
+                  <Label htmlFor="price">Price (₦) *</Label>
                   <Input
-                    id="brand"
-                    value={newProduct.brand}
-                    onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
-                    placeholder="e.g., Apple, Samsung"
+                    id="price"
+                    type="number"
+                    value={newProduct.price}
+                    onChange={(e) => setNewProduct(prev => ({...prev, price: e.target.value}))}
+                    placeholder="450000"
                   />
                 </div>
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="category">Category *</Label>
-                  <Select value={newProduct.category} onValueChange={(value) => setNewProduct({...newProduct, category: value})}>
+                  <Select value={newProduct.category} onValueChange={(value) => setNewProduct(prev => ({...prev, category: value}))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Smartphones">Smartphones</SelectItem>
-                      <SelectItem value="Laptops">Laptops</SelectItem>
-                      <SelectItem value="Gaming">Gaming</SelectItem>
-                      <SelectItem value="Audio">Audio</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="condition">Condition *</Label>
-                  <Select value={newProduct.condition} onValueChange={(value) => setNewProduct({...newProduct, condition: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select condition" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="New">New</SelectItem>
-                      <SelectItem value="Like New">Like New</SelectItem>
-                      <SelectItem value="Good">Good</SelectItem>
-                      <SelectItem value="Fair">Fair</SelectItem>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -275,52 +262,76 @@ const AdminProducts = () => {
                     id="stock"
                     type="number"
                     value={newProduct.stock}
-                    onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
-                    placeholder="0"
+                    onChange={(e) => setNewProduct(prev => ({...prev, stock: e.target.value}))}
+                    placeholder="10"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="price">Selling Price (₦) *</Label>
+                  <Label htmlFor="brand">Brand</Label>
                   <Input
-                    id="price"
-                    type="number"
-                    value={newProduct.price}
-                    onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
-                    placeholder="450000"
+                    id="brand"
+                    value={newProduct.brand}
+                    onChange={(e) => setNewProduct(prev => ({...prev, brand: e.target.value}))}
+                    placeholder="Apple, Samsung, etc."
                   />
                 </div>
                 <div>
-                  <Label htmlFor="originalPrice">Original Price (₦)</Label>
+                  <Label htmlFor="model">Model</Label>
                   <Input
-                    id="originalPrice"
-                    type="number"
-                    value={newProduct.originalPrice}
-                    onChange={(e) => setNewProduct({...newProduct, originalPrice: e.target.value})}
-                    placeholder="500000"
+                    id="model"
+                    value={newProduct.model}
+                    onChange={(e) => setNewProduct(prev => ({...prev, model: e.target.value}))}
+                    placeholder="iPhone 15 Pro Max"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="color">Color</Label>
-                  <Input
-                    id="color"
-                    value={newProduct.color}
-                    onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-                    placeholder="e.g., Space Black"
-                  />
+                  <Label htmlFor="condition">Condition</Label>
+                  <Select value={newProduct.condition} onValueChange={(value) => setNewProduct(prev => ({...prev, condition: value}))}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="new">New</SelectItem>
+                      <SelectItem value="like-new">Like New</SelectItem>
+                      <SelectItem value="good">Good</SelectItem>
+                      <SelectItem value="fair">Fair</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="storage">Storage</Label>
                   <Input
                     id="storage"
                     value={newProduct.storage}
-                    onChange={(e) => setNewProduct({...newProduct, storage: e.target.value})}
-                    placeholder="e.g., 256GB"
+                    onChange={(e) => setNewProduct(prev => ({...prev, storage: e.target.value}))}
+                    placeholder="256GB"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="color">Color</Label>
+                  <Input
+                    id="color"
+                    value={newProduct.color}
+                    onChange={(e) => setNewProduct(prev => ({...prev, color: e.target.value}))}
+                    placeholder="Space Gray"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="batteryHealth">Battery Health</Label>
+                  <Input
+                    id="batteryHealth"
+                    value={newProduct.batteryHealth}
+                    onChange={(e) => setNewProduct(prev => ({...prev, batteryHealth: e.target.value}))}
+                    placeholder="95%"
                   />
                 </div>
                 <div>
@@ -328,8 +339,8 @@ const AdminProducts = () => {
                   <Input
                     id="warranty"
                     value={newProduct.warranty}
-                    onChange={(e) => setNewProduct({...newProduct, warranty: e.target.value})}
-                    placeholder="e.g., 12 months"
+                    onChange={(e) => setNewProduct(prev => ({...prev, warranty: e.target.value}))}
+                    placeholder="1 Year Apple Warranty"
                   />
                 </div>
               </div>
@@ -339,40 +350,72 @@ const AdminProducts = () => {
                 <Textarea
                   id="description"
                   value={newProduct.description}
-                  onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
-                  placeholder="Product description..."
+                  onChange={(e) => setNewProduct(prev => ({...prev, description: e.target.value}))}
+                  placeholder="Detailed product description..."
                   rows={3}
                 />
               </div>
 
               <div>
-                <Label htmlFor="features">Key Features (comma separated)</Label>
-                <Textarea
-                  id="features"
-                  value={newProduct.features}
-                  onChange={(e) => setNewProduct({...newProduct, features: e.target.value})}
-                  placeholder="Feature 1, Feature 2, Feature 3..."
-                  rows={2}
-                />
+                <Label>Product Images</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600 mb-2">Upload product images (Max 6)</p>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="product-images"
+                  />
+                  <Button type="button" variant="outline" size="sm" asChild>
+                    <label htmlFor="product-images" className="cursor-pointer">
+                      Choose Images
+                    </label>
+                  </Button>
+                </div>
+
+                {productImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    {productImages.map((file, index) => (
+                      <div key={index} className="relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Product ${index + 1}`}
+                          className="w-full h-20 object-cover rounded"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <Button onClick={handleAddProduct} className="w-full">
-                Add Product to Inventory
+                Add Product
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Enhanced Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Products</p>
                 <p className="text-2xl font-bold">{totalProducts}</p>
-                <p className="text-xs text-gray-500">In catalog</p>
               </div>
               <Package className="w-8 h-8 text-blue-600" />
             </div>
@@ -384,9 +427,8 @@ const AdminProducts = () => {
               <div>
                 <p className="text-sm text-gray-600">Active Products</p>
                 <p className="text-2xl font-bold text-green-600">{activeProducts}</p>
-                <p className="text-xs text-gray-500">Available for sale</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-green-600" />
+              <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -394,11 +436,10 @@ const AdminProducts = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Out of Stock</p>
-                <p className="text-2xl font-bold text-red-600">{outOfStock}</p>
-                <p className="text-xs text-gray-500">Need restocking</p>
+                <p className="text-sm text-gray-600">Low Stock</p>
+                <p className="text-2xl font-bold text-yellow-600">{lowStockProducts}</p>
               </div>
-              <AlertTriangle className="w-8 h-8 text-red-600" />
+              <AlertTriangle className="w-8 h-8 text-yellow-600" />
             </div>
           </CardContent>
         </Card>
@@ -406,29 +447,16 @@ const AdminProducts = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Inventory Value</p>
-                <p className="text-2xl font-bold">₦{totalValue.toLocaleString()}</p>
-                <p className="text-xs text-gray-500">Current stock value</p>
+                <p className="text-sm text-gray-600">Total Value</p>
+                <p className="text-2xl font-bold text-purple-600">₦{totalValue.toLocaleString()}</p>
               </div>
-              <DollarSign className="w-8 h-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Sales</p>
-                <p className="text-2xl font-bold text-orange-600">{totalSales}</p>
-                <p className="text-xs text-gray-500">Units sold</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-orange-600" />
+              <TrendingUp className="w-8 h-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Enhanced Search and Filters */}
+      {/* Search and Filters */}
       <Card className="mb-6">
         <CardContent className="p-6">
           <div className="flex gap-4">
@@ -436,7 +464,7 @@ const AdminProducts = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search products, brands, categories..."
+                  placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -449,10 +477,9 @@ const AdminProducts = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="smartphones">Smartphones</SelectItem>
-                <SelectItem value="laptops">Laptops</SelectItem>
-                <SelectItem value="gaming">Gaming</SelectItem>
-                <SelectItem value="audio">Audio</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -462,23 +489,19 @@ const AdminProducts = () => {
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="low_stock">Low Stock</SelectItem>
                 <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                <SelectItem value="discontinued">Discontinued</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline">
-              <Filter className="w-4 h-4 mr-2" />
-              More Filters
-            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Enhanced Products Table */}
+      {/* Products Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Product Inventory ({filteredProducts.length})</CardTitle>
+          <CardTitle>All Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -486,10 +509,11 @@ const AdminProducts = () => {
               <TableRow>
                 <TableHead>Product</TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Pricing</TableHead>
+                <TableHead>Price</TableHead>
                 <TableHead>Stock</TableHead>
-                <TableHead>Performance</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Performance</TableHead>
+                <TableHead>Updated</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -498,20 +522,22 @@ const AdminProducts = () => {
                 <TableRow key={product.id}>
                   <TableCell>
                     <div className="flex items-center space-x-3">
-                      <img
-                        src={product.image}
+                      <img 
+                        src={product.images[0]} 
                         alt={product.name}
-                        className="w-12 h-12 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded-lg"
                       />
                       <div>
                         <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.brand} • {product.color}</p>
+                        <p className="text-sm text-gray-500">{product.brand} {product.model}</p>
                         <p className="text-xs text-gray-400">ID: {product.id}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{product.category}</Badge>
+                    <Badge variant="outline" className="capitalize">
+                      {product.category}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div>
@@ -519,50 +545,29 @@ const AdminProducts = () => {
                       {product.originalPrice && product.originalPrice > product.price && (
                         <p className="text-sm text-gray-500 line-through">₦{product.originalPrice.toLocaleString()}</p>
                       )}
-                      <Badge variant="outline" className="text-xs">
-                        {product.condition}
-                      </Badge>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <Badge variant={getStockColor(product.stock)}>
-                        {product.stock} units
-                      </Badge>
-                      <div className="mt-1">
-                        <Input
-                          type="number"
-                          value={product.stock}
-                          onChange={(e) => handleUpdateStock(product.id, parseInt(e.target.value))}
-                          className="w-20 h-6 text-xs"
-                        />
-                      </div>
+                      <p className="font-medium">{product.stock} units</p>
+                      <p className="text-sm text-gray-500">{product.sold} sold</p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      <p>Sales: <span className="font-medium">{product.sales_count || 0}</span></p>
-                      <p>Views: <span className="font-medium">{product.views || 0}</span></p>
-                      <p className="text-xs text-gray-500">Added: {product.date_added}</p>
+                    <Badge variant={getStatusColor(product.status)} className="flex items-center space-x-1 w-fit">
+                      {getStatusIcon(product.status)}
+                      <span className="capitalize">{product.status.replace('_', ' ')}</span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="text-sm">⭐ {product.rating} ({product.reviews})</p>
+                      <p className="text-sm text-gray-500">{product.sold} sales</p>
                     </div>
                   </TableCell>
+                  <TableCell>{product.updated_at}</TableCell>
                   <TableCell>
-                    <Select onValueChange={(value) => handleUpdateStatus(product.id, value)}>
-                      <SelectTrigger className="w-32">
-                        <Badge variant={getStatusColor(product.status)}>
-                          {product.status.replace('_', ' ')}
-                        </Badge>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                        <SelectItem value="discontinued">Discontinued</SelectItem>
-                        <SelectItem value="draft">Draft</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
+                    <div className="flex space-x-2">
                       <Button size="sm" variant="ghost">
                         <Eye className="w-4 h-4" />
                       </Button>
