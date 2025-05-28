@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -59,6 +59,8 @@ const ProductDetail = () => {
   const discount = product.originalPrice ? 
     Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
+  const isWishlisted = isInWishlist(id);
+
   const handleAddToCart = () => {
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
@@ -67,6 +69,39 @@ const ProductDetail = () => {
       title: "Added to cart",
       description: `${quantity} x ${product.name} added to your cart.`,
     });
+  };
+
+  const handleWishlistToggle = () => {
+    if (isWishlisted) {
+      removeFromWishlist(id);
+      toast({
+        title: "Removed from wishlist",
+        description: `${product.name} has been removed from your wishlist.`,
+      });
+    } else {
+      addToWishlist(product);
+      toast({
+        title: "Added to wishlist",
+        description: `${product.name} has been added to your wishlist.`,
+      });
+    }
+  };
+
+  const handleShare = () => {
+    const productUrl = `${window.location.origin}/product/${id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: `Check out this ${product.name} on ArigoHub`,
+        url: productUrl,
+      });
+    } else {
+      navigator.clipboard.writeText(productUrl);
+      toast({
+        title: "Link copied",
+        description: "Product link has been copied to clipboard.",
+      });
+    }
   };
 
   const handleBuyNow = () => {
@@ -208,10 +243,15 @@ const ProductDetail = () => {
                 >
                   Add to Cart
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Heart className="w-4 h-4" />
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={handleWishlistToggle}
+                  className={isWishlisted ? 'text-red-500 border-red-500' : ''}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
                 </Button>
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" onClick={handleShare}>
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>

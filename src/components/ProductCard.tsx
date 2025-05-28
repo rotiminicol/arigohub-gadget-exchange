@@ -2,7 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, Eye } from 'lucide-react';
+import { Heart, Eye, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -42,9 +42,10 @@ const ProductCard = ({
   specifications,
   features
 }: ProductCardProps) => {
-  const { addToCart } = useCart();
+  const { addToCart, addToWishlist, removeFromWishlist, isInWishlist } = useCart();
   const { toast } = useToast();
   const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+  const isWishlisted = isInWishlist(id);
 
   const handleAddToCart = () => {
     const product = {
@@ -67,6 +68,49 @@ const ProductCard = ({
       title: "Added to cart",
       description: `${name} has been added to your cart.`,
     });
+  };
+
+  const handleWishlistToggle = () => {
+    const product = {
+      id,
+      name,
+      price,
+      image,
+      condition,
+      category,
+      brand
+    };
+
+    if (isWishlisted) {
+      removeFromWishlist(id);
+      toast({
+        title: "Removed from wishlist",
+        description: `${name} has been removed from your wishlist.`,
+      });
+    } else {
+      addToWishlist(product);
+      toast({
+        title: "Added to wishlist",
+        description: `${name} has been added to your wishlist.`,
+      });
+    }
+  };
+
+  const handleShare = () => {
+    const productUrl = `${window.location.origin}/product/${id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: name,
+        text: `Check out this ${name} on ArigoHub`,
+        url: productUrl,
+      });
+    } else {
+      navigator.clipboard.writeText(productUrl);
+      toast({
+        title: "Link copied",
+        description: "Product link has been copied to clipboard.",
+      });
+    }
   };
 
   return (
@@ -95,9 +139,18 @@ const ProductCard = ({
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+              className={`h-8 w-8 p-0 bg-white/90 hover:bg-white ${isWishlisted ? 'text-red-500' : ''}`}
+              onClick={handleWishlistToggle}
             >
-              <Heart className="h-4 w-4" />
+              <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
+              onClick={handleShare}
+            >
+              <Share2 className="h-4 w-4" />
             </Button>
             <Button
               size="sm"

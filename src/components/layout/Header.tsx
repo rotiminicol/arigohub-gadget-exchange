@@ -1,8 +1,9 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { 
   ShoppingCart, 
   Menu, 
@@ -12,13 +13,16 @@ import {
   Laptop,
   Gamepad2,
   Headphones,
-  Shield
+  Shield,
+  Heart
 } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { getTotalItems } = useCart();
+  const [searchQuery, setSearchQuery] = useState('');
+  const { getTotalItems, wishlistItems } = useCart();
+  const navigate = useNavigate();
   const cartItemsCount = getTotalItems();
 
   const categories = [
@@ -27,6 +31,14 @@ const Header = () => {
     { name: 'Gaming', icon: Gamepad2, href: '/category/gaming' },
     { name: 'Audio', icon: Headphones, href: '/category/audio' },
   ];
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -39,6 +51,22 @@ const Header = () => {
             </div>
             <span className="text-xl font-bold text-gray-900">ArigoHub</span>
           </Link>
+
+          {/* Search Bar - Desktop */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-8">
+            <form onSubmit={handleSearch} className="flex w-full">
+              <Input
+                type="text"
+                placeholder="Search for products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rounded-r-none border-r-0"
+              />
+              <Button type="submit" variant="outline" className="rounded-l-none">
+                <Search className="w-4 h-4" />
+              </Button>
+            </form>
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
@@ -61,9 +89,19 @@ const Header = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            {/* Search Button - Desktop */}
-            <Button variant="ghost" size="sm" className="hidden md:flex">
+            {/* Search Button - Mobile */}
+            <Button variant="ghost" size="sm" className="md:hidden">
               <Search className="w-4 h-4" />
+            </Button>
+
+            {/* Wishlist */}
+            <Button variant="ghost" size="sm" className="relative">
+              <Heart className="w-5 h-5" />
+              {wishlistItems.length > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center p-0 text-xs">
+                  {wishlistItems.length}
+                </Badge>
+              )}
             </Button>
 
             {/* Admin Portal Button */}
@@ -117,6 +155,20 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t">
           <div className="container mx-auto px-4 py-4 space-y-4">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="flex">
+              <Input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rounded-r-none border-r-0"
+              />
+              <Button type="submit" variant="outline" className="rounded-l-none">
+                <Search className="w-4 h-4" />
+              </Button>
+            </form>
+            
             <Link to="/" className="block text-gray-700 hover:text-primary transition-colors">
               Home
             </Link>
